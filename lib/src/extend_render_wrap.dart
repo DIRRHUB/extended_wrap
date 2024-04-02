@@ -1,5 +1,6 @@
-import 'package:flutter/rendering.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/rendering.dart';
 
 /// Created by elileo on 2021/12/3.
 
@@ -54,6 +55,7 @@ class ExtendedRenderWrap extends RenderBox
     int maxLines = 1,
     int minLines = 1,
     bool hasOverflow = false,
+    Function(bool value)? hasOverflowCallback,
   })  : assert(maxLines >= 1),
         _direction = direction,
         _alignment = alignment,
@@ -66,9 +68,11 @@ class ExtendedRenderWrap extends RenderBox
         _maxLines = maxLines,
         _minLines = minLines,
         _hasOverflow = hasOverflow,
+        _hasOverflowCallback = hasOverflowCallback,
         _clipBehavior = clipBehavior {
     addAll(children);
   }
+  Function(bool value)? _hasOverflowCallback;
 
   /// The direction to use as the main axis.
   ///
@@ -154,6 +158,7 @@ class ExtendedRenderWrap extends RenderBox
     if (_hasOverflow == value) return;
     _hasOverflow = value;
     markNeedsLayout();
+    _hasOverflowCallback?.call(value);
   }
 
   /// How the runs themselves should be placed in the cross axis.
@@ -323,8 +328,7 @@ class ExtendedRenderWrap extends RenderBox
           break;
       }
     }
-    if (runAlignment == WrapAlignment.start ||
-        runAlignment == WrapAlignment.end) {
+    if (runAlignment == WrapAlignment.start || runAlignment == WrapAlignment.end) {
       switch (direction) {
         case Axis.horizontal:
           break;
@@ -334,8 +338,7 @@ class ExtendedRenderWrap extends RenderBox
           break;
       }
     }
-    if (crossAxisAlignment == WrapCrossAlignment.start ||
-        crossAxisAlignment == WrapCrossAlignment.end) {
+    if (crossAxisAlignment == WrapCrossAlignment.start || crossAxisAlignment == WrapCrossAlignment.end) {
       switch (direction) {
         case Axis.horizontal:
           break;
@@ -350,8 +353,7 @@ class ExtendedRenderWrap extends RenderBox
 
   @override
   void setupParentData(RenderBox child) {
-    if (child.parentData is! LimitWrapParentData)
-      child.parentData = LimitWrapParentData();
+    if (child.parentData is! LimitWrapParentData) child.parentData = LimitWrapParentData();
   }
 
   @override
@@ -395,8 +397,7 @@ class ExtendedRenderWrap extends RenderBox
         double height = 0.0;
         RenderBox? child = firstChild;
         while (child != null) {
-          height =
-              math.max(height, child.getMinIntrinsicHeight(double.infinity));
+          height = math.max(height, child.getMinIntrinsicHeight(double.infinity));
           child = childAfter(child);
         }
         return height;
@@ -451,8 +452,7 @@ class ExtendedRenderWrap extends RenderBox
     }
   }
 
-  double _getChildCrossAxisOffset(bool flipCrossAxis, double runCrossAxisExtent,
-      double childCrossAxisExtent) {
+  double _getChildCrossAxisOffset(bool flipCrossAxis, double runCrossAxisExtent, double childCrossAxisExtent) {
     final double freeSpace = runCrossAxisExtent - childCrossAxisExtent;
     switch (crossAxisAlignment) {
       case WrapCrossAlignment.start:
@@ -471,8 +471,7 @@ class ExtendedRenderWrap extends RenderBox
     return _computeDryLayout(constraints);
   }
 
-  Size _computeDryLayout(BoxConstraints constraints,
-      [ChildLayouter layoutChild = ChildLayoutHelper.dryLayoutChild]) {
+  Size _computeDryLayout(BoxConstraints constraints, [ChildLayouter layoutChild = ChildLayoutHelper.dryLayoutChild]) {
     late BoxConstraints childConstraints;
     double mainAxisLimit = 0.0;
     switch (direction) {
@@ -497,8 +496,7 @@ class ExtendedRenderWrap extends RenderBox
       final double childMainAxisExtent = _getMainAxisExtent(childSize);
       final double childCrossAxisExtent = _getCrossAxisExtent(childSize);
       // There must be at least one child before we move on to the next run.
-      if (childCount > 0 &&
-          runMainAxisExtent + childMainAxisExtent + spacing > mainAxisLimit) {
+      if (childCount > 0 && runMainAxisExtent + childMainAxisExtent + spacing > mainAxisLimit) {
         mainAxisExtent = math.max(mainAxisExtent, runMainAxisExtent);
         crossAxisExtent += runCrossAxisExtent + runSpacing;
         runMainAxisExtent = 0.0;
@@ -565,10 +563,8 @@ class ExtendedRenderWrap extends RenderBox
 
     while (child != null) {
       if (currentRowNumber > maxLines && !hasOverflow) {
-        child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-            parentUsesSize: true);
-        final LimitWrapParentData childParentData =
-            child.parentData as LimitWrapParentData;
+        child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
+        final LimitWrapParentData childParentData = child.parentData as LimitWrapParentData;
         child = childParentData.nextSibling;
         continue;
       } else {
@@ -578,53 +574,42 @@ class ExtendedRenderWrap extends RenderBox
       double childMainAxisExtent = _getMainAxisExtent(child.size);
       double childCrossAxisExtent = _getCrossAxisExtent(child.size);
 
-      final LimitWrapParentData childParentData =
-          child.parentData as LimitWrapParentData;
+      final LimitWrapParentData childParentData = child.parentData as LimitWrapParentData;
       childParentData._isHide = false;
 
       bool needCalculateSpace = true;
 
       if (hasOverflow) {
         lastChild!.layout(childConstraints, parentUsesSize: true);
-        final double overflowMainAxisExtent =
-            _getMainAxisExtent(lastChild!.size);
+        final double overflowMainAxisExtent = _getMainAxisExtent(lastChild!.size);
         if ((isNeedHideOverflow || currentRowNumber == 1) &&
             minLines == maxLines &&
             childParentData.nextSibling == null) {
-          lastChild!.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-              parentUsesSize: true);
+          lastChild!.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
           child = null;
           continue;
         }
 
-        if (currentRowNumber > maxLines &&
-            childParentData.nextSibling != null) {
+        if (currentRowNumber > maxLines && childParentData.nextSibling != null) {
           needCalculateSpace = false;
           childParentData._isHide = true;
-          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-              parentUsesSize: true);
+          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
           childMainAxisExtent = _getMainAxisExtent(child.size);
           childCrossAxisExtent = _getCrossAxisExtent(child.size);
         }
 
         if (childCount > 0 &&
-            runMainAxisExtent +
-                    spacing * 2 +
-                    childMainAxisExtent +
-                    overflowMainAxisExtent >
-                mainAxisLimit) {
+            runMainAxisExtent + spacing * 2 + childMainAxisExtent + overflowMainAxisExtent > mainAxisLimit) {
           if (crossAxisExtent + runCrossAxisExtent + childCrossAxisExtent >
               (childCrossAxisExtent * maxLines + spacing * (maxLines - 1))) {
             if (childParentData.nextSibling != null) {
               needCalculateSpace = false;
               if (childParentData.nextSibling == lastChild &&
-                  runMainAxisExtent + spacing + childMainAxisExtent <=
-                      mainAxisLimit) {
+                  runMainAxisExtent + spacing + childMainAxisExtent <= mainAxisLimit) {
                 isNeedHideOverflow = true;
               } else {
                 childParentData._isHide = true;
-                child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-                    parentUsesSize: true);
+                child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
               }
               childMainAxisExtent = _getMainAxisExtent(child.size);
               childCrossAxisExtent = _getCrossAxisExtent(child.size);
@@ -632,52 +617,39 @@ class ExtendedRenderWrap extends RenderBox
               currentRowNumber++;
             } else if (currentRowNumber <= maxLines && maxLines == minLines) {
               childParentData._isHide = true;
-              child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-                  parentUsesSize: true);
+              child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
             }
-          } else if (childParentData.nextSibling == null &&
-              currentRowNumber <= maxLines &&
-              maxLines == minLines) {
+          } else if (childParentData.nextSibling == null && currentRowNumber <= maxLines && maxLines == minLines) {
             childParentData._isHide = true;
-            child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-                parentUsesSize: true);
+            child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
           }
-          if (runMainAxisExtent + spacing + childMainAxisExtent >
-              mainAxisLimit) {
+          if (runMainAxisExtent + spacing + childMainAxisExtent > mainAxisLimit) {
             mainAxisExtent = math.max(mainAxisExtent, runMainAxisExtent);
             crossAxisExtent += runCrossAxisExtent;
             if (runMetrics.isNotEmpty) crossAxisExtent += runSpacing;
-            runMetrics.add(_LimitRunMetrics(
-                runMainAxisExtent, runCrossAxisExtent, childCount));
+            runMetrics.add(_LimitRunMetrics(runMainAxisExtent, runCrossAxisExtent, childCount));
             runMainAxisExtent = 0.0;
             runCrossAxisExtent = 0.0;
             childCount = 0;
             currentRowNumber++;
           }
-        } else if (childParentData.nextSibling == null &&
-            currentRowNumber <= maxLines &&
-            maxLines == minLines) {
+        } else if (childParentData.nextSibling == null && currentRowNumber <= maxLines && maxLines == minLines) {
           childParentData._isHide = true;
-          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-              parentUsesSize: true);
+          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
         }
-      } else if (childCount > 0 &&
-          runMainAxisExtent + spacing + childMainAxisExtent > mainAxisLimit) {
+      } else if (childCount > 0 && runMainAxisExtent + spacing + childMainAxisExtent > mainAxisLimit) {
         mainAxisExtent = math.max(mainAxisExtent, runMainAxisExtent);
         crossAxisExtent += runCrossAxisExtent;
         if (runMetrics.isNotEmpty) crossAxisExtent += runSpacing;
-        runMetrics.add(_LimitRunMetrics(
-            runMainAxisExtent, runCrossAxisExtent, childCount));
+        runMetrics.add(_LimitRunMetrics(runMainAxisExtent, runCrossAxisExtent, childCount));
         runMainAxisExtent = 0.0;
         runCrossAxisExtent = 0.0;
         childCount = 0;
         currentRowNumber++;
 
         if (currentRowNumber > maxLines) {
-          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0),
-              parentUsesSize: true);
-          final LimitWrapParentData childParentData =
-              child.parentData as LimitWrapParentData;
+          child.layout(BoxConstraints(maxWidth: 0, maxHeight: 0), parentUsesSize: true);
+          final LimitWrapParentData childParentData = child.parentData as LimitWrapParentData;
           child = childParentData.nextSibling;
           continue;
         }
@@ -694,8 +666,7 @@ class ExtendedRenderWrap extends RenderBox
       mainAxisExtent = math.max(mainAxisExtent, runMainAxisExtent);
       crossAxisExtent += runCrossAxisExtent;
       if (runMetrics.isNotEmpty) crossAxisExtent += runSpacing;
-      runMetrics.add(
-          _LimitRunMetrics(runMainAxisExtent, runCrossAxisExtent, childCount));
+      runMetrics.add(_LimitRunMetrics(runMainAxisExtent, runCrossAxisExtent, childCount));
     }
 
     final int runCount = runMetrics.length;
@@ -717,11 +688,9 @@ class ExtendedRenderWrap extends RenderBox
         break;
     }
 
-    _hasVisualOverflow = containerMainAxisExtent < mainAxisExtent ||
-        containerCrossAxisExtent < crossAxisExtent;
+    _hasVisualOverflow = containerMainAxisExtent < mainAxisExtent || containerCrossAxisExtent < crossAxisExtent;
 
-    final double crossAxisFreeSpace =
-        math.max(0.0, containerCrossAxisExtent - crossAxisExtent);
+    final double crossAxisFreeSpace = math.max(0.0, containerCrossAxisExtent - crossAxisExtent);
     double runLeadingSpace = 0.0;
     double runBetweenSpace = 0.0;
     switch (runAlignment) {
@@ -734,8 +703,7 @@ class ExtendedRenderWrap extends RenderBox
         runLeadingSpace = crossAxisFreeSpace / 2.0;
         break;
       case WrapAlignment.spaceBetween:
-        runBetweenSpace =
-            runCount > 1 ? crossAxisFreeSpace / (runCount - 1) : 0.0;
+        runBetweenSpace = runCount > 1 ? crossAxisFreeSpace / (runCount - 1) : 0.0;
         break;
       case WrapAlignment.spaceAround:
         runBetweenSpace = crossAxisFreeSpace / runCount;
@@ -748,9 +716,7 @@ class ExtendedRenderWrap extends RenderBox
     }
 
     runBetweenSpace += runSpacing;
-    double crossAxisOffset = flipCrossAxis
-        ? containerCrossAxisExtent - runLeadingSpace
-        : runLeadingSpace;
+    double crossAxisOffset = flipCrossAxis ? containerCrossAxisExtent - runLeadingSpace : runLeadingSpace;
 
     child = firstChild;
     for (int i = 0; i < runCount; ++i) {
@@ -759,8 +725,7 @@ class ExtendedRenderWrap extends RenderBox
       final double runCrossAxisExtent = metrics.crossAxisExtent;
       final int childCount = metrics.childCount;
 
-      final double mainAxisFreeSpace =
-          math.max(0.0, containerMainAxisExtent - runMainAxisExtent);
+      final double mainAxisFreeSpace = math.max(0.0, containerMainAxisExtent - runMainAxisExtent);
       double childLeadingSpace = 0.0;
       double childBetweenSpace = 0.0;
 
@@ -774,8 +739,7 @@ class ExtendedRenderWrap extends RenderBox
           childLeadingSpace = mainAxisFreeSpace / 2.0;
           break;
         case WrapAlignment.spaceBetween:
-          childBetweenSpace =
-              childCount > 1 ? mainAxisFreeSpace / (childCount - 1) : 0.0;
+          childBetweenSpace = childCount > 1 ? mainAxisFreeSpace / (childCount - 1) : 0.0;
           break;
         case WrapAlignment.spaceAround:
           childBetweenSpace = mainAxisFreeSpace / childCount;
@@ -788,29 +752,24 @@ class ExtendedRenderWrap extends RenderBox
       }
 
       childBetweenSpace += spacing;
-      double childMainPosition = flipMainAxis
-          ? containerMainAxisExtent - childLeadingSpace
-          : childLeadingSpace;
+      double childMainPosition = flipMainAxis ? containerMainAxisExtent - childLeadingSpace : childLeadingSpace;
 
       if (flipCrossAxis) crossAxisOffset -= runCrossAxisExtent;
 
       while (child != null) {
-        final LimitWrapParentData childParentData =
-            child.parentData as LimitWrapParentData;
+        final LimitWrapParentData childParentData = child.parentData as LimitWrapParentData;
         if (childParentData._runIndex != i) break;
         final double childMainAxisExtent = _getMainAxisExtent(child.size);
 
         final double childCrossAxisExtent = _getCrossAxisExtent(child.size);
-        final double childCrossAxisOffset = _getChildCrossAxisOffset(
-            flipCrossAxis, runCrossAxisExtent, childCrossAxisExtent);
+        final double childCrossAxisOffset =
+            _getChildCrossAxisOffset(flipCrossAxis, runCrossAxisExtent, childCrossAxisExtent);
         if (flipMainAxis) childMainPosition -= childMainAxisExtent;
-        childParentData.offset = _getOffset(
-            childMainPosition, crossAxisOffset + childCrossAxisOffset);
+        childParentData.offset = _getOffset(childMainPosition, crossAxisOffset + childCrossAxisOffset);
         if (flipMainAxis)
           childMainPosition -= childBetweenSpace;
         else
-          childMainPosition += childMainAxisExtent +
-              (childParentData._isHide ? 0 : childBetweenSpace);
+          childMainPosition += childMainAxisExtent + (childParentData._isHide ? 0 : childBetweenSpace);
         child = childParentData.nextSibling;
       }
 
@@ -845,8 +804,7 @@ class ExtendedRenderWrap extends RenderBox
     }
   }
 
-  final LayerHandle<ClipRectLayer> _clipRectLayer =
-      LayerHandle<ClipRectLayer>();
+  final LayerHandle<ClipRectLayer> _clipRectLayer = LayerHandle<ClipRectLayer>();
 
   @override
   void dispose() {
@@ -863,10 +821,8 @@ class ExtendedRenderWrap extends RenderBox
     properties.add(EnumProperty<WrapAlignment>('runAlignment', runAlignment));
     properties.add(DoubleProperty('runSpacing', runSpacing));
     properties.add(DoubleProperty('crossAxisAlignment', runSpacing));
-    properties.add(EnumProperty<TextDirection>('textDirection', textDirection,
-        defaultValue: null));
-    properties.add(EnumProperty<VerticalDirection>(
-        'verticalDirection', verticalDirection,
-        defaultValue: VerticalDirection.down));
+    properties.add(EnumProperty<TextDirection>('textDirection', textDirection, defaultValue: null));
+    properties.add(
+        EnumProperty<VerticalDirection>('verticalDirection', verticalDirection, defaultValue: VerticalDirection.down));
   }
 }
