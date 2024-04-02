@@ -155,7 +155,6 @@ class ExtendedRenderWrap extends RenderBox
   bool _hasOverflow;
 
   set hasOverflow(bool value) {
-    _hasOverflowCallback?.call(value);
     if (_hasOverflow == value) return;
     _hasOverflow = value;
     markNeedsLayout();
@@ -689,6 +688,7 @@ class ExtendedRenderWrap extends RenderBox
     }
 
     _hasVisualOverflow = containerMainAxisExtent < mainAxisExtent || containerCrossAxisExtent < crossAxisExtent;
+    hasOverflowCallback?.call(_hasVisualOverflow);
 
     final double crossAxisFreeSpace = math.max(0.0, containerCrossAxisExtent - crossAxisExtent);
     double runLeadingSpace = 0.0;
