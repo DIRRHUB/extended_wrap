@@ -688,7 +688,7 @@ class ExtendedRenderWrap extends RenderBox
     }
 
     _hasVisualOverflow = containerMainAxisExtent < mainAxisExtent || containerCrossAxisExtent < crossAxisExtent;
-    hasOverflowCallback?.call(_hasVisualOverflow);
+    _hasOverflowCallback?.call(_hasVisualOverflow);
 
     final double crossAxisFreeSpace = math.max(0.0, containerCrossAxisExtent - crossAxisExtent);
     double runLeadingSpace = 0.0;
