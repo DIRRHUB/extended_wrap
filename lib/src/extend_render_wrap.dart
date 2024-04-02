@@ -157,8 +157,8 @@ class ExtendedRenderWrap extends RenderBox
   set hasOverflow(bool value) {
     if (_hasOverflow == value) return;
     _hasOverflow = value;
-    markNeedsLayout();
     _hasOverflowCallback?.call(value);
+    markNeedsLayout();
   }
 
   /// How the runs themselves should be placed in the cross axis.
