@@ -22,6 +22,8 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
 
   final Widget? overflowWidget;
 
+  final Function(bool value)? hasOverflowCallback;
+
   ExtendedWrap({
     Key? key,
     this.direction = Axis.horizontal,
@@ -36,13 +38,11 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
     this.maxLines = 1,
     this.minLines = 1,
     this.overflowWidget,
+    this.hasOverflowCallback,
     List<Widget> children = const <Widget>[],
   })  : assert(maxLines >= 1),
         assert(minLines >= 1 && minLines <= maxLines),
-        super(key: key, children: [
-          ...children,
-          if (overflowWidget != null) overflowWidget
-        ]);
+        super(key: key, children: [...children, if (overflowWidget != null) overflowWidget]);
 
   /// The direction to use as the main axis.
   ///
@@ -195,12 +195,12 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
         clipBehavior: clipBehavior,
         maxLines: maxLines,
         minLines: minLines,
+        hasOverflowCallback: hasOverflowCallback,
         hasOverflow: (overflowWidget != null));
   }
 
   @override
-  void updateRenderObject(
-      BuildContext context, ExtendedRenderWrap renderObject) {
+  void updateRenderObject(BuildContext context, ExtendedRenderWrap renderObject) {
     renderObject
       ..direction = direction
       ..alignment = alignment
@@ -225,11 +225,9 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
     properties.add(EnumProperty<WrapAlignment>('runAlignment', runAlignment));
     properties.add(DoubleProperty('runSpacing', runSpacing));
     properties.add(DoubleProperty('crossAxisAlignment', runSpacing));
-    properties.add(EnumProperty<TextDirection>('textDirection', textDirection,
-        defaultValue: null));
-    properties.add(EnumProperty<VerticalDirection>(
-        'verticalDirection', verticalDirection,
-        defaultValue: VerticalDirection.down));
+    properties.add(EnumProperty<TextDirection>('textDirection', textDirection, defaultValue: null));
+    properties.add(
+        EnumProperty<VerticalDirection>('verticalDirection', verticalDirection, defaultValue: VerticalDirection.down));
     properties.add(IntProperty('maxLines', maxLines));
     properties.add(IntProperty('minLines', minLines));
   }
