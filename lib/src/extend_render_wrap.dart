@@ -155,9 +155,9 @@ class ExtendedRenderWrap extends RenderBox
   bool _hasOverflow;
 
   set hasOverflow(bool value) {
+    _hasOverflowCallback?.call(value);
     if (_hasOverflow == value) return;
     _hasOverflow = value;
-    _hasOverflowCallback?.call(value);
     markNeedsLayout();
   }
 
