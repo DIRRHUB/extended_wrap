@@ -213,6 +213,7 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
       ..maxLines = maxLines
       ..minLines = minLines
       ..hasOverflow = (overflowWidget != null)
+      ..hasOverflowCallback = hasOverflowCallback
       ..clipBehavior = clipBehavior;
   }
 
